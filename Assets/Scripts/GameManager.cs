@@ -1,22 +1,26 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     
+    [Header("Character Prefabs")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject[] enemyPrefabs;
+    
+    [Header("References")]
     [SerializeField] private Transform characterParent;
     
     [Header("UI Elements")]
     [SerializeField] private GameObject battleUI;
     [SerializeField] private GameObject gameOverUI;
-    [SerializeField] private Text enemyNameText;
+    [SerializeField] private TextMeshProUGUI enemyNameText;
     
     private Player player;
     private Enemy currentEnemy;
-    
+
     private void Awake()
     {
         if (Instance == null)
@@ -28,18 +32,30 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
     private void Start()
     {
         InitializeGame();
     }
-    
+
     private void InitializeGame()
     {
+        // Clean up existing characters
+        foreach (Transform child in characterParent)
+        {
+            Destroy(child.gameObject);
+        }
+
         // Create player
         GameObject playerObj = Instantiate(playerPrefab, characterParent);
         player = playerObj.GetComponent<Player>();
         
+        if (player == null)
+        {
+            Debug.LogError("Player component missing on player prefab!");
+            return;
+        }
+
         // Spawn first enemy
         SpawnNewEnemy();
         
@@ -47,48 +63,55 @@ public class GameManager : MonoBehaviour
         battleUI.SetActive(true);
         gameOverUI.SetActive(false);
     }
-    
+
     public void SpawnNewEnemy()
     {
         if (currentEnemy != null)
         {
             Destroy(currentEnemy.gameObject);
         }
-        
-        // Randomly select an enemy prefab
+
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        {
+            Debug.LogError("No enemy prefabs assigned!");
+            return;
+        }
+
         GameObject enemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
         GameObject enemyObj = Instantiate(enemyPrefab, characterParent);
         currentEnemy = enemyObj.GetComponent<Enemy>();
         
-        // Update UI
+        if (currentEnemy == null)
+        {
+            Debug.LogError("Enemy component missing on enemy prefab!");
+            return;
+        }
+
         enemyNameText.text = currentEnemy.CharacterName;
     }
-    
+
     public void PlayerAttack()
     {
         if (player.IsDead() || currentEnemy.IsDead()) return;
         
-        // Player attacks enemy
         int damage = player.Attack();
         currentEnemy.TakeDamage(damage);
         
-        // Check if enemy died
         if (currentEnemy.IsDead())
         {
             SpawnNewEnemy();
         }
         else
         {
-            // Enemy counterattacks
             EnemyAttack();
         }
     }
-    
+
     public void ToggleShield()
     {
         player.ToggleShield();
     }
-    
+
     private void EnemyAttack()
     {
         if (player.IsDead() || currentEnemy.IsDead()) return;
@@ -101,13 +124,13 @@ public class GameManager : MonoBehaviour
             GameOver();
         }
     }
-    
+
     private void GameOver()
     {
         battleUI.SetActive(false);
         gameOverUI.SetActive(true);
     }
-    
+
     public void RestartGame()
     {
         // Clean up current characters

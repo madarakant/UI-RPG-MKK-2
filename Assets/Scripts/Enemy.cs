@@ -2,18 +2,14 @@ using UnityEngine;
 
 public abstract class Enemy : Character
 {
-    public abstract int GetExperienceReward();
+    public abstract int GetExperienceReward();  // Required implementation
     
-    public override void TakeDamage(int damage)
+    protected override void Awake()
     {
-        base.TakeDamage(damage);
-        
-        if (IsDead())
-        {
-            OnDeath();
-        }
+        base.Awake();
+        // Common enemy initialization can go here
     }
-    
+
     protected virtual void OnDeath()
     {
         // Can be overridden by specific enemies

@@ -1,23 +1,48 @@
 using UnityEngine;
-using UnityEngine.UI; // Required for UI elements
+using UnityEngine.UI;
+using TMPro;
 
 public class Player : Character
 {
+    [Header("UI References")]
+    [SerializeField] private Slider _playerHealthSlider;
+    [SerializeField] private TextMeshProUGUI _playerHealthText;
+
     [Header("Shield Settings")]
-    [SerializeField] private Image shieldIndicator; // Reference to the shield UI image
+    [SerializeField] private Image shieldIndicator;
     [SerializeField] private float shieldBreakChance = 0.3f;
     
     private bool shieldActive = false;
     private Weapon currentWeapon;
 
+    protected override void Awake()
+    {
+        
+        base.Awake();
+        CharacterName = "Miku";
+        
+        // Initialize UI references
+        healthSlider = _playerHealthSlider;
+        healthDisplayText = _playerHealthText;
+        
+        // Initialize stats
+        MaxHealth = 100;
+        CurrentHealth = MaxHealth;
+        AttackPower = 10;
+        Defense = 5;
+    }
+
+    // ... rest of your Player methods ...
+
+
+    // ... rest of your Player methods ...
+
+
     public void ToggleShield()
     {
         shieldActive = !shieldActive;
-        
-        // Update the shield indicator visibility
         if (shieldIndicator != null)
             shieldIndicator.gameObject.SetActive(shieldActive);
-        
         Debug.Log($"Shield {(shieldActive ? "ON" : "OFF")}");
     }
 
@@ -25,9 +50,7 @@ public class Player : Character
     {
         if (shieldActive)
         {
-            damage = Mathf.Max(1, damage / 2); // Reduce damage by half
-            
-            // Check if shield breaks
+            damage = Mathf.Max(1, damage / 2);
             if (Random.value < shieldBreakChance)
             {
                 shieldActive = false;
@@ -36,17 +59,17 @@ public class Player : Character
                 Debug.Log("Shield broke!");
             }
         }
-        
-        base.TakeDamage(damage); // Apply remaining damage
+        base.TakeDamage(damage);
     }
 
     public int Attack()
     {
-        return (currentWeapon != null) ? currentWeapon.GetDamage() : AttackPower;
+        return currentWeapon?.GetDamage() ?? AttackPower;
     }
 
     public void EquipWeapon(Weapon weapon)
     {
         currentWeapon = weapon;
+        AttackPower = weapon.GetDamage();
     }
 }
